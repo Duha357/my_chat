@@ -1,5 +1,4 @@
 import select
-import log.server_log_config
 from logging import getLogger
 from log.decorators import log
 from socket import socket, AF_INET, SOCK_STREAM
@@ -15,6 +14,7 @@ ADDRESS = ('', 7777)
 def presence_response(presence_message):
     """
     Формирование ответа клиенту
+
     :param presence_message: Словарь presence запроса
     :return: Словарь ответа
     """
@@ -29,9 +29,13 @@ def presence_response(presence_message):
 
 
 def read_requests(r_clients, all_clients):
-    '''
+    """
     Чтение запросов из списка клиентов
-    '''
+
+    :param r_clients:
+    :param all_clients:
+    :return:
+    """
     responses = {}
 
     for sock in r_clients:
@@ -46,9 +50,13 @@ def read_requests(r_clients, all_clients):
 
 
 def write_responses(requests, w_clients, all_clients):
-    '''
+    """
     Сообщение от пишущих - читающим
-    '''
+
+    :param requests:
+    :param w_clients:
+    :param all_clients:
+    """
 
     for sock in w_clients:
         for i in requests:
@@ -62,9 +70,9 @@ def write_responses(requests, w_clients, all_clients):
 
 
 def mainloop():
-    '''
+    """
     Основной цикл обработки запросов клиентов
-    '''
+    """
     clients = []
 
     server = socket(AF_INET, SOCK_STREAM)

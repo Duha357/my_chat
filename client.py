@@ -1,8 +1,6 @@
-import sys
 import time
 import random
 import threading
-import log.client_log_config
 from logging import getLogger
 from log.decorators import log
 from socket import socket, AF_INET, SOCK_STREAM
@@ -18,13 +16,14 @@ ADDRESS = ('localhost', 7777)
 def create_presence(account_name):
     """
     Формирование ​​сообщения о присутствии
+
     :param account_name: имя пользователя
     :return: словарь сообщения
     """
     if not isinstance(account_name, str):
         raise TypeError
 
-    message = {
+    return {
         ACTION: PRESENCE,
         TIME: time.time(),
         USER: {
@@ -32,13 +31,12 @@ def create_presence(account_name):
         }
     }
 
-    return message
-
 
 @log(logger)
 def create_message(account_name, destination, text):
     """
     Формирование ​​сообщения о присутствии
+
     :param account_name: имя пользователя
     :param destination: получатель
     :param text: передаваемый текст
@@ -47,7 +45,7 @@ def create_message(account_name, destination, text):
     if not isinstance(account_name, str):
         raise TypeError
 
-    message = {
+    return {
         ACTION: MSG,
         TIME: time.time(),
         TO: destination,
@@ -55,27 +53,25 @@ def create_message(account_name, destination, text):
         MSG: text
     }
 
-    return message
-
 
 @log(logger)
 def translate_message(message):
     """
     Разбор сообщения
+
     :param message: словарь ответа от сервера
     :return: корректный словарь ответа
     """
     if not isinstance(message, dict):
         raise TypeError
 
-    code = message[RESPONSE]
-
-    return f'Код подключения: {code}'
+    return f'Код подключения: {message[RESPONSE]}'
 
 
 def read_messages(client, account_name):
     """
     Постоянное получение сообщений клиентом
+
     :param client: сокет клиента
     """
     while True:

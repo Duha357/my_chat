@@ -1,6 +1,7 @@
-from subprocess import Popen, CREATE_NEW_CONSOLE
+from _winapi import CREATE_NEW_CONSOLE
+from subprocess import Popen
 
-p_list = []
+proc_list = []
 
 while True:
     user = input("Запустить несколько клиентов и сервер (s) / Закрыть всё (x) / Выйти (q) ")
@@ -9,12 +10,12 @@ while True:
         break
     elif user == 's':    
         for _ in range(1):
-            p_list.append(Popen('python server.py', creationflags=CREATE_NEW_CONSOLE))
+            proc_list.append(Popen('python server.py', creationflags=CREATE_NEW_CONSOLE))
             print('Запуск сервера')
         for _ in range(2):
-            p_list.append(Popen('python client.py', creationflags=CREATE_NEW_CONSOLE))
+            proc_list.append(Popen('python client.py', creationflags=CREATE_NEW_CONSOLE))
             print('Запуск клиентов')
     elif user == 'x':
-        for p in p_list:
-            p.kill()
-        p_list.clear()
+        for process in proc_list:
+            process.kill()
+        proc_list.clear()

@@ -10,7 +10,7 @@ server_logger = logging.getLogger('server_logger_instance')
 server_logger.setLevel(logging.INFO)
 
 # ротация файлов по дням
-server_handler = logging.handlers.TimedRotatingFileHandler(SERVER_LOF_FILE_PATH, when='d')  # d - значит, ротация по дням
+server_handler = logging.handlers.TimedRotatingFileHandler(SERVER_LOF_FILE_PATH, when='d')
 
 formatter = logging.Formatter("%(asctime)s , %(levelname)s : %(module)s - %(message)s")
 server_handler.setFormatter(formatter)
