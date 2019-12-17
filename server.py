@@ -1,9 +1,9 @@
 import select
 from logging import getLogger
-from log.decorators import log
+from decorators.log_decorator import log
 from socket import socket, AF_INET, SOCK_STREAM
-from jim.utils import get_message, send_message
-from jim.config import *
+from helpers.convert_helper import get_message, send_message
+from configs.config import *
 
 
 logger = getLogger('server_logger_instance')

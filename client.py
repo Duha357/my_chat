@@ -2,10 +2,10 @@ import time
 import random
 import threading
 from logging import getLogger
-from log.decorators import log
+from decorators.log_decorator import log
 from socket import socket, AF_INET, SOCK_STREAM
-from jim.config import *
-from jim.utils import get_message, send_message
+from configs.config import *
+from helpers.convert_helper import get_message, send_message
 
 
 logger = getLogger('client_logger_instance')
