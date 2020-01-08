@@ -2,13 +2,14 @@ import json
 import time
 import random
 import threading
-from logging import getLogger
+import logging
+import configs.client_log_config
 from socket import socket, AF_INET, SOCK_STREAM
-from decorators.log_decorator import log
 from configs.client_name_config import *
+from decorators.log_decorator import log
 from helpers.message_helper import get_message, send_message
 
-LOGGER = getLogger('client_logger_instance')
+LOGGER = logging.getLogger('client_logger_instance')
 ADDRESS = ('127.0.0.1', 7777)
 
 

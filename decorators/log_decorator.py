@@ -2,7 +2,7 @@ from functools import wraps
 
 
 def log(logger):
-    def decorator(func):
+    def my_decorator(func):
         """
         Логгирует использование функции
 
@@ -11,12 +11,10 @@ def log(logger):
         """
         @wraps(func)
         def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
+            logger.info(f'{func.__module__}, {func.__name__} : {args}, {kwargs}')
 
-            logger.info(f'{func.__module__}, {func.__name__}, {result}')
-
-            return result
+            return func(*args, **kwargs)
 
         return wrapper
 
-    return decorator
+    return my_decorator

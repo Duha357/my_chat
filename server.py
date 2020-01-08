@@ -1,9 +1,10 @@
 import select
-from logging import getLogger
+import logging
+import configs.server_log_config
 from socket import socket, AF_INET, SOCK_STREAM
 from helpers.message_helper import get_message, send_message
 
-LOGGER = getLogger('server_logger_instance')
+LOGGER = logging.getLogger('server_logger_instance')
 ADDRESS = ('', 7777)
 
 
