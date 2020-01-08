@@ -1,19 +1,19 @@
 import logging.handlers
 import os
 
-# абсолютный путь
+# выбираем путь до лога сервера и его имя
 LOG_FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
-# путь к сервер логу
-SERVER_LOF_FILE_PATH = os.path.join(LOG_FOLDER_PATH, 'server_log.log')
+SERVER_LOF_FILE_PATH = os.path.join(LOG_FOLDER_PATH, 'server.log')
 
-server_logger = logging.getLogger('server_logger_instance')
-server_logger.setLevel(logging.INFO)
+# выбор формата записи в обработчик
+formatter = logging.Formatter("%(asctime)s - %(module)s - %(levelname)s : %(message)s")
 
-# ротация файлов по дням
-server_handler = logging.handlers.TimedRotatingFileHandler(SERVER_LOF_FILE_PATH, when='d')
-
-formatter = logging.Formatter("%(asctime)s , %(levelname)s : %(module)s - %(message)s")
+# создание и настройка обработчика
+server_handler = logging.handlers.TimedRotatingFileHandler(SERVER_LOF_FILE_PATH, encoding='utf8', when='d')
 server_handler.setFormatter(formatter)
+server_handler.setLevel(logging.INFO)
 
-# добавляю один обработчик
+# создание и настройка регистратора
+server_logger = logging.getLogger('server_logger_instance')
 server_logger.addHandler(server_handler)
+server_logger.setLevel(logging.INFO)

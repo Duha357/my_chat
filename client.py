@@ -1,124 +1,199 @@
+import json
 import time
 import random
 import threading
 from logging import getLogger
-from decorators.log_decorator import log
 from socket import socket, AF_INET, SOCK_STREAM
-from configs.config import *
-from helpers.convert_helper import get_message, send_message
+from decorators.log_decorator import log
+from configs.client_name_config import *
+from helpers.message_helper import get_message, send_message
+
+LOGGER = getLogger('client_logger_instance')
+ADDRESS = ('127.0.0.1', 7777)
 
 
-logger = getLogger('client_logger_instance')
-ADDRESS = ('localhost', 7777)
+class ClientSender(threading.Thread):
+    def __init__(self, account_name, sock):
+        """
+        Данные клиента
 
+        :param account_name: имя пользователя
+        :param sock: сокет пользователя
+        """
+        self.account_name = account_name
+        self.sock = sock
+        super().__init__()
 
-@log(logger)
-def create_presence(account_name):
-    """
-    Формирование ​​сообщения о присутствии
+    @log(LOGGER)
+    def presence_request(self):
+        """
+        Формирование ​​сообщения о присутствии
 
-    :param account_name: имя пользователя
-    :return: словарь сообщения
-    """
-    if not isinstance(account_name, str):
-        raise TypeError
-
-    return {
-        ACTION: PRESENCE,
-        TIME: time.time(),
-        USER: {
-            ACCOUNT_NAME: account_name
+        :return: словарь сообщения
+        """
+        return {
+            'action': 'presence',
+            'time': time.time(),
+            'to': self.account_name,
+            'from': self.account_name,
         }
-    }
 
+    @log(LOGGER)
+    def exit_request(self):
+        """
+        Формирование ​​сообщения о выходе
 
-@log(logger)
-def create_message(account_name, destination, text):
-    """
-    Формирование ​​сообщения о присутствии
+        :return: словарь сообщения
+        """
+        return {
+            'action': 'exit',
+            'time': time.time(),
+            'to': self.account_name,
+            'from': self.account_name,
+        }
 
-    :param account_name: имя пользователя
-    :param destination: получатель
-    :param text: передаваемый текст
-    :return: словарь сообщения
-    """
-    if not isinstance(account_name, str):
-        raise TypeError
+    @log(LOGGER)
+    def create_message(self, to_account, text):
+        """
+        Формирование ​​сообщения для передачи
 
-    return {
-        ACTION: MSG,
-        TIME: time.time(),
-        TO: destination,
-        FROM: account_name,
-        MSG: text
-    }
+        :param to_account: имя пользователя
+        :param text: передаваемый текст
+        :return: словарь сообщения
+        """
+        if not isinstance(to_account, str):
+            raise TypeError
 
+        return {
+            'action': 'message',
+            'time': time.time(),
+            'to': to_account,
+            'from': self.account_name,
+            'message': text
+        }
 
-@log(logger)
-def translate_message(message):
-    """
-    Разбор сообщения
+    def run(self):
+        """
+        Ввод команд клиентом
+        """
+        send_message(self.sock, self.presence_request())
 
-    :param message: словарь ответа от сервера
-    :return: корректный словарь ответа
-    """
-    if not isinstance(message, dict):
-        raise TypeError
+        # ждём пока придёт ответ сервера о присутствии
+        time.sleep(3)
+        print('help - для справки')
 
-    return f'Код подключения: {message[RESPONSE]}'
+        while True:
+            command = input('Введите команду:\n')
 
+            params = command.split()
 
-def read_messages(client, account_name):
-    """
-    Постоянное получение сообщений клиентом
-
-    :param client: сокет клиента
-    """
-    while True:
-        message = get_message(client)
-        if message['from'] != account_name:
-            print(message['message'])
-
-
-def client_unit():
-    """
-    Создание клиента
-    """
-    with socket(AF_INET, SOCK_STREAM) as sock:
-        sock.connect(ADDRESS)
-
-        account_name = f'{random.choice(NAME)}'
-        send_message(sock, create_presence(account_name))
-        server_response = get_message(sock)
-        translate_response = translate_message(server_response)
-        print(translate_response)
-        print(f'Ваше имя: {account_name}')
-
-        if translate_response == 'Код подключения: 200':
-            t = threading.Thread(target=read_messages, args=(sock, account_name))
-            t.start()
-
-            while True:
-                msg = input('> ')
-                if msg.startswith('message'):
-                    params = msg.split()
-                    try:
-                        to = params[1]
-                        text = f' '.join(params[2:])
-                    except IndexError:
-                        print('Не задан получатель или текст сообщения')
-                    else:
-                        message = create_message(account_name, to, text)
-                        send_message(sock, message)
-                elif msg == 'help':
-                    print('message <получатель> <текст> - отправить сообщение')
-                elif msg == 'exit':
-                    break
+            if params[0] == 'message':
+                try:
+                    to = params[1]
+                    text = f' '.join(params[2:])
+                except IndexError:
+                    print('Не задан получатель или текст сообщения')
                 else:
-                    print('Неверная команда, для справки введите help')
+                    send_message(self.sock, self.create_message(to, text))
+            elif params[0] == 'help':
+                print('message <получатель> <текст> - отправить сообщение')
+            elif params[0] == 'exit':
+                send_message(self.sock, self.exit_request())
 
-            sock.disconnect()
+                print('Соединение с сервером завершено!')
+                LOGGER.info('Завершено соединение с сервером')
+
+                break
+            else:
+                print('Неверная команда, для справки введите help')
+
+
+class ClientReader(threading.Thread):
+    def __init__(self, account_name, sock):
+        """
+        Данные клиента
+
+        :param account_name: имя пользователя
+        :param sock: сокет пользователя
+        """
+        self.account_name = account_name
+        self.sock = sock
+        super().__init__()
+
+    @log(LOGGER)
+    def presence_response(self, message):
+        """
+        Разбор ответа сервера о присутствии
+
+        :param message: словарь ответа от сервера
+        :return: статус подключения
+        """
+        if not isinstance(message, dict):
+            raise TypeError
+
+        print(message)
+
+        if message['response'] == 200:
+            print(f'Cоединение с сервером установлено')
+            LOGGER.info(f'Cоединение с сервером установлено')
+        elif message['response'] == 400:
+            print(f"Код подключения: 400 : {message['error']}")
+            LOGGER.info(f"Код подключения: 400 : {message['error']}")
+
+    def run(self):
+        """
+        Постоянное получение сообщений клиентом
+        """
+        while True:
+            try:
+                message = get_message(self.sock)
+
+                if 'action' in message \
+                    and message['action'] == 'message' \
+                        and message['to'] == self.account_name:
+                    print(f"\nСообщение от пользователя {message['from']}: {message['message']}")
+                    print(f"Введите команду:")
+                elif 'action' in message \
+                    and message['action'] == 'presence' \
+                        and message['to'] == self.account_name:
+                    self.presence_response(message)
+            except (OSError, ConnectionError, ConnectionAbortedError, ConnectionResetError, json.JSONDecodeError):
+                LOGGER.critical('Потеряно соединение с сервером')
+                break
+
+
+def main():
+    client_name = f'{random.choice(NAME)}'
+
+    print(f'Клиент {client_name} запущен')
+    LOGGER.info(f'Клиент {client_name} запущен')
+
+    print('Подождите пока установится соединение с сервером...')
+
+    try:
+        sock = socket(AF_INET, SOCK_STREAM)
+        sock.connect(ADDRESS)
+    except json.JSONDecodeError:
+        LOGGER.error('Не удалось декодировать полученную Json строку.')
+        exit(1)
+    except (ConnectionRefusedError, ConnectionError):
+        LOGGER.critical(f'Не удалось подключиться к серверу {ADDRESS}')
+        exit(1)
+    else:
+        reader = ClientReader(client_name, sock)
+        reader.daemon = True
+        reader.start()
+
+        sender = ClientSender(client_name, sock)
+        sender.daemon = True
+        sender.start()
+
+        while True:
+            time.sleep(5)
+            if reader.is_alive() and sender.is_alive():
+                continue
+            break
 
 
 if __name__ == '__main__':
-    client_unit()
+    main()

@@ -3,6 +3,12 @@ from functools import wraps
 
 def log(logger):
     def decorator(func):
+        """
+        Логгирует использование функции
+
+        :param func:
+        :return:
+        """
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
